@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	    <meta name="apple-mobile-web-app-capable" content="yes">
+		<title></title>
+		<script src="js/touchscroll.js"></script>
+		<script src="js/css-beziers.js"></script>
+		<script src="js/jquery2.1.1.js"></script>
+		<link href="css/touchscroll.css" />
+		<style type="text/css">
+			body,html{
+				margin: 0;
+				padding: 0;
+			}
+			.dvParent{
+				width: 90%;
+				/*margin-top: 50px;*/
+				/*border:1px solid red;*/
+			}
+			.dvParent .itemparent{
+				width: auto;
+				overflow-x: auto;
+				white-space: nowrap;
+				 transform: translateX(0px);
+			}
+			.dvParent .item{
+				display: inline-block;
+				width: 100px;
+				height: 50px;
+				/*border:1px solid #000000;*/
+				background-color: orange;
+			}
+			.item{
+				color: white;
+				line-height: 50px;
+				text-align: center;
+				margin: 0;
+				padding: 0;
+			  -webkit-transition-property: left, top, background, -webkit-transform;
+			  -webkit-transition-duration: 2s, 2s, 1s, 1s;
+			  -webkit-transition-timing-function: ease-out, ease-in, linear, ease-in-out;
+			  -webkit-transition-delay: 0, 0, 0, 1s;
+			}
+			.current{
+				background-color: red !important;
+			}
+			.touchScrollInner{
+				/*transition-duration:0.5s;*/
+			}
+			.headmask{
+				height: 100%;
+				width: 100%;
+				background-color: gray;
+				/*opacity: 0.1;*/
+				position: fixed;
+				display: none;
+			}
+			.headmask .item{
+				/*background-color: pink;*/
+				/*display: inline-block;*/
+				/*width: 100px;*/
+				height: 50px;
+				float: left;
+			}
+			.touchScrollInner{
+				transform: translate(0px, 0px);
+			}
+		</style>
+	</head>
+	<body>
+	
+		<div id="rightcorner" class="item" style="position: absolute;right: 0;top: 0;width: 10%;height: 50px;background-color: blue;">
+			角
+		</div>
+		<div class="dvParent">
+			<div id="testpar" class="itemparent">
+				<div class="item current">全部</div>
+				<div class="item">男装</div>
+				<div class="item">女装</div>
+				<div class="item">衣服</div>
+				<div class="item">帽子</div>
+				<div class="item">围巾</div>
+				<div class="item">鞋子</div>
+				<div class="item">帽子</div>
+				<div class="item">围巾</div>
+				<div class="item">鞋子</div>
+				<div class="item">帽子</div>
+				<div class="item">围巾</div>
+				<div class="item">鞋子</div>
+			</div>
+		</div>
+		<div class="headmask">
+			<div class="maskparent">
+				<div class="item">全部</div>
+				<div class="item">男装</div>
+				<div class="item">女装</div>
+				<div class="item">衣服</div>
+				<div class="item">帽子</div>
+				<div class="item">围巾</div>
+				<div class="item">鞋子</div>
+				<div class="item">帽子</div>
+				<div class="item">围巾</div>
+				<div class="item">鞋子</div>
+				<div class="item">帽子</div>
+				<div class="item">围巾</div>
+				<div class="item">鞋子</div>
+			</div>
+		</div>
+		
+	</body>
+		<script>
+			var scroller = new TouchScroll(document.querySelector('#testpar'),{elastic:true});
+			
+			var headArr = [];
+			
+			$('#testpar .item').click(function(e){
+				console.log($(this).index());
+				var itemIndex = $(this).index();
+				var lastItem = $('#testpar .item').length - 1;
+				var secondLastItem = lastItem - 1;
+				$(this).addClass('current').siblings().removeClass('current');
+				
+				toMoveScroll(itemIndex);
+			});
+			$('.headmask .item').click(function(e){
+				showOrHideMask();
+				var itemIndex = $(this).index();
+				$('#testpar .item:eq('+itemIndex+')').addClass('current').siblings().removeClass('current');
+				toMoveScroll(itemIndex);
+			});
+			
+			function toMoveScroll(itemIndex){//进行偏移量移动
+				console.log('开始移动');
+				var temptrans = $('.touchScrollInner').css('transform');
+				//每个格子宽度
+				var singleWidth = 105;
+				var translateCal =  getTransform('.touchScrollInner') - singleWidth;
+				
+				
+				//移动位置后进行细微调整
+				//当前点击的item索引-  0,1
+				//每个格子宽106 
+				translateCal = itemIndex * -singleWidth + singleWidth;
+				if(itemIndex == 0){
+					translateCal = 0;
+				}
+				//获取总长度
+				var screenWidth = window.screen.width;
+				//屏幕宽度要减去右上角角标宽度-角标宽度为屏幕的10%
+				screenWidth = screenWidth - screenWidth * 0.1
+				
+				var totalLength = $('.touchScrollInner').css('width').replace('px','') - screenWidth;
+				
+				if( Math.abs(translateCal) > totalLength){
+					translateCal = -totalLength;
+				}
+				
+				//进行位置移动
+				$('.touchScrollInner').css('transform','translate('+translateCal+'px,0)');
+				$('.touchScrollInner').css('transition-duration','0.5s');
+			}
+			function getTransform(ele){//获取translatex的值
+				var transform = $(ele).css('transform')|| $(ele).css('-moz-transform') ||$(ele).css('-webkit-transform') ||$(ele).css('-ms-transform') || $(ele).css('-o-transform');
+				console.log(transform);
+				var values = transform.split('(')[1].split(')')[0].split(',');
+				var translatex = values[4];
+				console.log('translatex:'+translatex);
+				return translatex;
+			}
+			
+			//右上角点击
+			$('#rightcorner').click(function(){
+				showOrHideMask();
+			});
+			//显示隐藏蒙版表格
+			function showOrHideMask(){
+				var isShowOrHide = $('.headmask').css('display') == 'none' ? false:true;
+				var temHeight = window.screen.height;
+				if(isShowOrHide){
+					$('.headmask').fadeOut();
+				}else{
+					$('.headmask').show();
+					
+					$('.headmask').css('height','0').animate({height:temHeight+'px'})
+				}
+			}
+			//布局为3列
+			var colums = 3;
+			//两边留50px空隙
+			var marginLeftRight = 50;
+			//每个格子宽度
+			var maskItemWidth = (window.screen.width - marginLeftRight * 2) / colums
+			var maskwidth = window.screen.width - marginLeftRight * 2;
+			$('.maskparent').css('width',maskwidth+'px').css('padding-left',marginLeftRight+'px');
+			$('.headmask .item').css('width',maskItemWidth+'px');
+			
+		</script>
+</html>
